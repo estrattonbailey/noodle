@@ -1,0 +1,34 @@
+{
+  "name": "snapback",
+  "version": "0.0.2",
+  "description": "Tiny tweeing library that sparkles.",
+  "source": "index.js",
+  "module": "dist/snapback.es.js",
+  "main": "dist/snapback.js",
+  "umd:main": "dist/snapback.umd.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "microbundle build",
+    "watch": "microbundle watch",
+    "publish": "npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/estrattonbailey/snapback.git"
+  },
+  "author": "estrattonbailey",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/estrattonbailey/snapback/issues"
+  },
+  "homepage": "https://github.com/estrattonbailey/snapback#readme",
+  "devDependencies": {
+    "microbundle": "^0.4.4"
+  },
+  "dependencies": {
+    "rosin": "^0.2.0",
+    "tinkerbell": "0.0.2"
+  }
+}
