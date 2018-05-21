@@ -1,22 +1,27 @@
 import tinkerbell from 'tinkerbell'
 import rosin from 'rosin'
+import mitt from 'mitt'
 
 function ease (t, b, c, d) {
   return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
 }
 
 export default function snapback (slider) {
-  let width
+  let width = slider.clientWidth
   let prevIndex = 0
   let index = 0
   let slidesCount = 0
   const track = document.createElement('div')
+  let prevPosition = 0
   let position = 0
   let delta = 0
   let t = Date.now()
   let velo = 0
   let ticking = false
   let tick = null
+  let totalTravel = 0
+
+  const ev = mitt()
 
   track.style.cssText = `
     position: absolute;
@@ -36,9 +41,14 @@ export default function snapback (slider) {
   function mount () {
     for (let i = slider.children.length - 1; i > -1; i--) {
       const slide = slider.children[i]
+      totalTravel += slide.clientWidth
       track.insertBefore(slide, track.children[0])
+      slide.style.position = 'absolute'
+      slide.style.top = 0
       slidesCount++
     }
+
+    totalTravel -= width
 
     slider.appendChild(track)
   }
@@ -50,24 +60,53 @@ export default function snapback (slider) {
 
     for (let i = 0; i < track.children.length; i++) {
       const slide = track.children[i]
-      slide.style.transform = `translateX(${offset}px)`
-      offset = offset + width
+      slide.style.left = (i * (slide.clientWidth / width) * 100) + '%'
+      offset = offset + slide.clientWidth
     }
 
     delta = 0
-    position = index * width * -1
+    position = getPosition(index)
     track.style.transform = `translateX(${position}px)`
     slider.style.height = track.children[index].clientHeight + 'px'
   }
 
+  function reset () {
+    tick = typeof tick === 'function' ? tick() : clearInterval(tick)
+    ticking = false
+    delta = 0
+    ev.emit('settle', index)
+  }
+
+  function done (end) {
+    reset()
+    position = end
+    prevPosition = end
+    track.style.transform = `translateX(${end}px)`
+  }
+
+  /**
+   * Get position at index, basically either prevIndex or index
+   */
+  function getPosition (ind) {
+    let travel = 0
+    for (let i = 0; i < ind; i++) {
+      travel += track.children[i].clientWidth
+    }
+    return Math.min(travel, totalTravel) * -1
+  }
+
   function selectByVelocity () {
+    ev.emit('select', index)
+
     let v = Math.abs(velo)
-    const end = index * width * -1
-    let curr = position
-    let diff = Math.abs(end) - Math.abs(curr)
+    let prev = getPosition(prevIndex)
+    const end = getPosition(index)
+    const curr = position
+    let diff = Math.abs(end) - Math.abs(position)
     let d = diff
 
-    let firstSlide = delta > 0 && index === 0 && prevIndex === 0
+    const isAtZero = delta > 0 && index === 0 && prevIndex === 0
+    const isAtLastSlide = Math.abs(prev) > totalTravel
 
     ticking = true
 
@@ -75,40 +114,63 @@ export default function snapback (slider) {
       if (v > 0.2) {
         v *= 1 - 0.1
         const c = (diff * (1 - (d / diff)))
-        position = Math.round(firstSlide ? curr + c : curr - c)
+        position = isAtZero || isAtLastSlide ? curr + c : curr - c
         track.style.transform = `translateX(${position}px)`
         d *= 1 - 0.1
       } else {
-        position = end
-        track.style.transform = `translateX(${end}px)`
-        clearInterval(tick)
-        ticking = false
+        done(prev)
       }
     }, (1000 / 60))
   }
 
   function selectByIndex () {
+    ev.emit('select', index)
+
     ticking = true
 
-    const end = index * width * -1
+    const nextSlideWidth = track.children[index].clientWidth
+    const prev = getPosition(prevIndex)
+    const next = getPosition(index)
 
-    tick = tinkerbell(position, end, 1000, ease)(v => {
+    /**
+     * Prevent from traveling beyond the last slide
+     */
+    if (Math.abs(prev) > totalTravel) return
+
+    if (
+      index === track.children.length - 1
+      && nextSlideWidth < width
+    ) return done(prev)
+
+    const dir = prevIndex - index
+
+    let end = dir < 0 ? (prev - nextSlideWidth) : (prev + nextSlideWidth)
+
+    tick = tinkerbell(prev, next, 1000, ease)(v => {
       track.style.transform = `translateX(${v}px)`
       position = v
     }, () => {
-      track.style.transform = `translateX(${end}px)`
-      position = end
-      ticking = false
-      tick = null
+      done(end)
     })
   }
 
-  function whichByDistance (delta) {
-    if (delta > (width / 4)) {
-      return clamp(index - 1)
-    } else if (delta < ((width / 4) * -1)) {
-      return clamp(index + 1)
+  function whichByDistance (delta, dir, slidesPast = 0) {
+    const i = clamp(index + (slidesPast * dir * -1))
+    const threshold = 0.2
+    const currSlideWidth = track.children[i].clientWidth
+    // console.log(i)
+    // console.log(delta, currSlideWidth)
+    if (delta > currSlideWidth) {
+      // console.log('too far')
+      return whichByDistance(delta - currSlideWidth, dir, slidesPast + 1)
+    } else if (delta > (currSlideWidth * threshold)) {
+      // console.log('prev')
+      return clamp(i - dir)
+    } else if (delta < ((currSlideWidth * threshold) * -1)) {
+      // console.log('next')
+      return clamp(i - dir)
     } else {
+      // console.log('same')
       return index
     }
   }
@@ -124,10 +186,7 @@ export default function snapback (slider) {
 
   drag.on('mousedown', (pos, e) => {
     if (ticking && tick) {
-      tick.stop ? tick.stop() : clearInterval(tick)
-      ticking = false
-      velo = 0
-      delta = 0
+      reset()
     }
   })
 
@@ -146,35 +205,31 @@ export default function snapback (slider) {
 
     position = position + delta
 
-    if (v > 20) {
-      // get anticipated resting position
-      let x = 0
-      while (v > 0.7) {
-        v *= 1 - 0.2
-        x += v
-      }
-      prevIndex = index
-      index = whichByDistance(x * dir)
-      selectByVelocity()
-      velo = 0
-    } else {
-      prevIndex = index
-      index = whichByDistance(delta)
-      velo = 0
-      selectByIndex()
+    let x = 0
+    while (v > 0.7) {
+      v *= 1 - 0.2
+      x += v
     }
+
+    prevIndex = index
+    index = whichByDistance(Math.abs(delta) + x, dir)
+    selectByVelocity()
+    velo = 0
   })
 
   return {
+    on: ev.on,
     prev () {
       prevIndex = index
       index = clamp(index - 1)
-      selectByIndex()
+      reset()
+      prevIndex !== index && selectByIndex()
     },
     next () {
       prevIndex = index
       index = clamp(index + 1)
-      selectByIndex()
+      reset()
+      prevIndex !== index && selectByIndex()
     }
   }
 }

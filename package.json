@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "microbundle build",
-    "watch": "microbundle watch",
+    "watch": "microbundle watch --compress false",
     "publish": "npm publish"
   },
   "repository": {
@@ -28,7 +28,8 @@
     "microbundle": "^0.4.4"
   },
   "dependencies": {
+    "mitt": "^1.1.3",
     "rosin": "^0.2.0",
-    "tinkerbell": "0.0.2"
+    "tinkerbell": "^0.2.0"
   }
 }
