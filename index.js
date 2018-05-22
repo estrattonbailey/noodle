@@ -118,7 +118,7 @@ export default function snapback (slider) {
         track.style.transform = `translateX(${position}px)`
         d *= 1 - 0.1
       } else {
-        done(prev)
+        done(end)
       }
     }, (1000 / 60))
   }
@@ -129,7 +129,7 @@ export default function snapback (slider) {
     ticking = true
 
     const nextSlideWidth = track.children[index].clientWidth
-    const prev = getPosition(prevIndex)
+    const prev = position // getPosition(prevIndex)
     const next = getPosition(index)
 
     /**
@@ -142,15 +142,11 @@ export default function snapback (slider) {
       && nextSlideWidth < width
     ) return done(prev)
 
-    const dir = prevIndex - index
-
-    let end = dir < 0 ? (prev - nextSlideWidth) : (prev + nextSlideWidth)
-
     tick = tinkerbell(prev, next, 1000, ease)(v => {
       track.style.transform = `translateX(${v}px)`
       position = v
     }, () => {
-      done(end)
+      done(next)
     })
   }
 
@@ -206,15 +202,18 @@ export default function snapback (slider) {
     position = position + delta
 
     let x = 0
-    while (v > 0.7) {
-      v *= 1 - 0.2
-      x += v
+    if (v > 0.7) {
+      while (v > 0.7) {
+        v *= 1 - 0.2
+        x += v
+      }
+    } else {
+      console.log('slow')
     }
 
     prevIndex = index
     index = whichByDistance(Math.abs(delta) + x, dir)
-    selectByVelocity()
-    velo = 0
+    v > 0.7 ? selectByVelocity() : selectByIndex()
   })
 
   return {
