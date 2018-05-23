@@ -1,5 +1,5 @@
 # snapback
-Flickable slideshow (WIP). **1.45kb gzipped.**
+Flickable slideshow (WIP). **1.85kb gzipped.**
 
 # Usage
 ```javascript
