@@ -61,6 +61,20 @@ export default function snapback (slider, opts = {}) {
     return i
   }
 
+  function cleanup () {
+    for (let i = track.children.length - 1; i > -1; i--) {
+      const slide = track.children[i]
+
+      slider.insertBefore(slide, slider.children[0])
+      slide.style.position = ''
+      slide.style.top = ''
+      slide.style.left = ''
+    }
+
+    slider.removeChild(track)
+    slider.style.height = ''
+  }
+
   /**
    * TODO
    *
@@ -227,23 +241,7 @@ export default function snapback (slider, opts = {}) {
     prevIndex !== index && selectByIndex()
   }
 
-  const drag = rosin(slider)
-
-  drag.on('mousedown', (pos, e) => {
-    if (ticking && tick) {
-      reset()
-    }
-  })
-
-  drag.on('drag', ({ x, y }, e) => {
-    dragging = true
-    velo = ((x - delta) / (e.timeStamp - t)) * (1000 / 60)
-    t = e.timeStamp
-    delta = x
-    track.style.transform = `translateX(${position + delta}px)`
-  })
-
-  drag.on('mouseup', () => {
+  function release () {
     dragging = false
 
     t = null
@@ -269,7 +267,26 @@ export default function snapback (slider, opts = {}) {
     }
 
     v > 0.7 ? selectByVelocity() : selectByIndex()
-  })
+  }
+
+  function move ({ x, y }, e) {
+    dragging = true
+    velo = ((x - delta) / (e.timeStamp - t)) * (1000 / 60)
+    t = e.timeStamp
+    delta = x
+    track.style.transform = `translateX(${position + delta}px)`
+  }
+
+  function start (pos, e) {
+    if (ticking && tick) {
+      reset()
+    }
+  }
+
+  const drag = rosin(slider)
+  drag.on('mousedown', start)
+  drag.on('drag', move)
+  drag.on('mouseup', release)
 
   window.addEventListener('resize', () => {
     requestAnimationFrame(resize)
@@ -290,6 +307,10 @@ export default function snapback (slider, opts = {}) {
     },
     next () {
       select(index + 1)
+    },
+    destroy () {
+      drag.destroy()
+      cleanup()
     }
   }
 }
