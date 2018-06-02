@@ -1,11 +1,11 @@
 {
-  "name": "snapback",
-  "version": "0.0.2",
+  "name": "noodle",
+  "version": "0.1.0",
   "description": "Tiny tweeing library that sparkles.",
   "source": "index.js",
-  "module": "dist/snapback.es.js",
-  "main": "dist/snapback.js",
-  "umd:main": "dist/snapback.umd.js",
+  "module": "dist/noodle.es.js",
+  "main": "dist/noodle.js",
+  "umd:main": "dist/noodle.umd.js",
   "files": [
     "dist"
   ],
@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/estrattonbailey/snapback.git"
+    "url": "git+ssh://git@github.com/estrattonbailey/noodle.git"
   },
   "author": "estrattonbailey",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/estrattonbailey/snapback/issues"
+    "url": "https://github.com/estrattonbailey/noodle/issues"
   },
-  "homepage": "https://github.com/estrattonbailey/snapback#readme",
+  "homepage": "https://github.com/estrattonbailey/noodle#readme",
   "devDependencies": {
     "microbundle": "^0.4.4"
   },

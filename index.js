@@ -6,14 +6,7 @@ function ease (t, b, c, d) {
   return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
 }
 
-/**
- * TODO
- *
- * 1. option - setHeight: disable height adjustments on resize
- * 2. api - destroy: needs to reset slides back to initial state
- */
-
-export default function snapback (slider, opts = {}) {
+export default function noodle (slider, opts = {}) {
   opts = Object.assign({
     setHeight: true
   }, opts)
@@ -71,6 +64,7 @@ export default function snapback (slider, opts = {}) {
       slide.style.left = ''
     }
 
+    slider.removeAttribute('tabindex')
     slider.removeChild(track)
     slider.style.height = ''
   }
@@ -93,6 +87,7 @@ export default function snapback (slider, opts = {}) {
     }
 
     slider.appendChild(track)
+    slider.setAttribute('tabindex', '0')
 
     totalTravel -= width + (window.innerWidth - width)
 
@@ -237,8 +232,11 @@ export default function snapback (slider, opts = {}) {
   function select (i) {
     prevIndex = index
     index = clamp(i)
-    reset()
-    prevIndex !== index && selectByIndex()
+
+    if (prevIndex !== index) {
+      reset()
+      selectByIndex()
+    }
   }
 
   function release () {
@@ -288,8 +286,12 @@ export default function snapback (slider, opts = {}) {
   drag.on('drag', move)
   drag.on('mouseup', release)
 
-  window.addEventListener('resize', () => {
-    requestAnimationFrame(resize)
+  window.addEventListener('resize', () => requestAnimationFrame(resize))
+  window.addEventListener('keydown', ({ keyCode }) => {
+    if (slider === document.activeElement || slider.contains(document.activeElement)) {
+      if (keyCode === 37) select(index - 1)
+      if (keyCode === 39) select(index + 1)
+    }
   })
 
   mount()
