@@ -13,7 +13,11 @@ function ease (t, b, c, d) {
  * 2. api - destroy: needs to reset slides back to initial state
  */
 
-export default function snapback (slider) {
+export default function snapback (slider, opts = {}) {
+  opts = Object.assign({
+    setHeight: true
+  }, opts)
+
   /**
    * Hoisted variables
    */
@@ -28,14 +32,15 @@ export default function snapback (slider) {
   let ticking = false
   let tick = null
   let totalTravel = 0
+  let dragging = false
 
   /**
    * Contains slides
    */
   const track = document.createElement('div')
   track.style.cssText = `
-    // position: absolute;
-    // top: 0; left: 0; right: 0; bottom: 0;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
   `
 
   /**
@@ -75,9 +80,9 @@ export default function snapback (slider) {
 
     slider.appendChild(track)
 
-    reflow()
+    totalTravel -= width + (window.innerWidth - width)
 
-    totalTravel -= width
+    reflow()
   }
 
   function reflow () {
@@ -94,7 +99,7 @@ export default function snapback (slider) {
       slide.style.left = offset + '%'
     }
 
-    slider.style.height = track.children[index].clientHeight + 'px'
+    if (opts.setHeight) slider.style.height = track.children[index].clientHeight + 'px'
   }
 
   /**
@@ -109,7 +114,7 @@ export default function snapback (slider) {
       totalTravel += track.children[i].clientWidth
     }
 
-    totalTravel -= width
+    totalTravel -= width + (window.innerWidth - width)
 
     reflow()
 
@@ -231,6 +236,7 @@ export default function snapback (slider) {
   })
 
   drag.on('drag', ({ x, y }, e) => {
+    dragging = true
     velo = ((x - delta) / (e.timeStamp - t)) * (1000 / 60)
     t = e.timeStamp
     delta = x
@@ -238,6 +244,8 @@ export default function snapback (slider) {
   })
 
   drag.on('mouseup', () => {
+    dragging = false
+
     t = null
 
     let dir = delta < 0 ? -1 : 1
