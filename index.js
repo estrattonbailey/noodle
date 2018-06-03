@@ -1,6 +1,5 @@
 import tinkerbell from 'tinkerbell'
 import rosin from 'rosin'
-import mitt from 'mitt'
 
 function ease (t, b, c, d) {
   return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
@@ -27,6 +26,19 @@ export default function noodle (slider, opts = {}) {
   let totalTravel = 0
   let dragging = false
 
+  const evs = {}
+
+  function on (ev, cb) {
+    evs[ev] = (evs[ev] || []).concat(cb)
+    return () => {
+      evs[ev].splice(evs[ev].indexOf(cb), 1)
+    }
+  }
+
+  function emit (ev, data) {
+    (evs[ev] || []).map(cb => cb(data))
+  }
+
   /**
    * Contains slides
    */
@@ -35,11 +47,6 @@ export default function noodle (slider, opts = {}) {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
   `
-
-  /**
-   * Events
-   */
-  const ev = mitt()
 
   /**
    * Limit to beginning and end
@@ -89,7 +96,7 @@ export default function noodle (slider, opts = {}) {
     slider.appendChild(track)
     slider.setAttribute('tabindex', '0')
 
-    totalTravel -= width + (window.innerWidth - width)
+    totalTravel -= width
 
     reflow()
   }
@@ -123,7 +130,7 @@ export default function noodle (slider, opts = {}) {
       totalTravel += track.children[i].clientWidth
     }
 
-    totalTravel -= width + (window.innerWidth - width)
+    totalTravel -= width
 
     reflow()
 
@@ -185,7 +192,7 @@ export default function noodle (slider, opts = {}) {
         d *= 1 - 0.1
       } else {
         reset()
-        prevIndex !== index && ev.emit('settle', index)
+        prevIndex !== index && emit('settle', index)
       }
     }, (1000 / 60))
   }
@@ -209,7 +216,7 @@ export default function noodle (slider, opts = {}) {
       position = v
     }, () => {
       reset()
-      prevIndex !== index && ev.emit('settle', index)
+      prevIndex !== index && emit('settle', index)
     })
   }
 
@@ -261,7 +268,7 @@ export default function noodle (slider, opts = {}) {
     index = whichByDistance(Math.abs(delta) + x, dir)
 
     if (prevIndex !== index) {
-      ev.emit('select', index)
+      emit('select', index)
     }
 
     v > 0.7 ? selectByVelocity() : selectByIndex()
@@ -298,7 +305,7 @@ export default function noodle (slider, opts = {}) {
   setActiveSlide()
 
   return {
-    on: ev.on,
+    on,
     resize,
     select,
     get index () {
