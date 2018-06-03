@@ -85,7 +85,15 @@ slider.destroy()
 ```
 
 # Inspiration
-When it comes to slideshows, [Flickity](https://github.com/metafizzy/flickity) sets the bar. [@metafizzy](https://github.com/metafizzy/)'s article, [Math Time: Resting Position](https://metafizzy.co/blog/math-time-resting-position/) was incredibly helpful, and I doubt I would have figured out the velocity maths without it.
+When it comes to slideshows, [Flickity](https://github.com/metafizzy/flickity)
+sets the bar. [@metafizzy](https://github.com/metafizzy/)'s article, [Math Time:
+Resting Position](https://metafizzy.co/blog/math-time-resting-position/) was
+incredibly helpful, and I doubt I would have figured out the velocity maths
+without it.
+
+## The Name
+Many thanks to [gentooist](https://github.com/gentooist) for allowing me to have
+the name `noodle`. Very kind of them!
 
 ## License
 MIT License © [Eric Bailey](https://estrattonbailey.com)
