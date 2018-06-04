@@ -74,6 +74,9 @@ export default function noodle (slider, opts = {}) {
     slider.removeAttribute('tabindex')
     slider.removeChild(track)
     slider.style.height = ''
+
+    window.removeEventListener('resize', resize)
+    window.removeEventListener('keydown', keypress)
   }
 
   /**
@@ -122,19 +125,21 @@ export default function noodle (slider, opts = {}) {
    * Called on each tick
    */
   function resize () {
-    width = slider.clientWidth
+    requestAnimationFrame(() => {
+      width = slider.clientWidth
 
-    totalTravel = 0
+      totalTravel = 0
 
-    for (let i = 0; i < track.children.length; i++) {
-      totalTravel += track.children[i].clientWidth
-    }
+      for (let i = 0; i < track.children.length; i++) {
+        totalTravel += track.children[i].clientWidth
+      }
 
-    totalTravel -= width
+      totalTravel -= width
 
-    reflow()
+      reflow()
 
-    selectByIndex()
+      selectByIndex()
+    })
   }
 
   /**
@@ -288,18 +293,20 @@ export default function noodle (slider, opts = {}) {
     }
   }
 
+  function keypress ({ keyCode }) {
+    if (slider === document.activeElement || slider.contains(document.activeElement)) {
+      if (keyCode === 37) select(index - 1)
+      if (keyCode === 39) select(index + 1)
+    }
+  }
+
   const drag = rosin(slider)
   drag.on('mousedown', start)
   drag.on('drag', move)
   drag.on('mouseup', release)
 
-  window.addEventListener('resize', () => requestAnimationFrame(resize))
-  window.addEventListener('keydown', ({ keyCode }) => {
-    if (slider === document.activeElement || slider.contains(document.activeElement)) {
-      if (keyCode === 37) select(index - 1)
-      if (keyCode === 39) select(index + 1)
-    }
-  })
+  window.addEventListener('resize', resize)
+  window.addEventListener('keydown', keypress)
 
   mount()
   setActiveSlide()
