@@ -245,6 +245,8 @@ export default function noodle (slider, opts = {}) {
     prevIndex = index
     index = clamp(i)
 
+    emit('select', index)
+
     if (prevIndex !== index) {
       reset()
       selectByIndex()
@@ -272,9 +274,7 @@ export default function noodle (slider, opts = {}) {
     prevIndex = index
     index = whichByDistance(Math.abs(delta) + x, dir)
 
-    if (prevIndex !== index) {
-      emit('select', index)
-    }
+    emit('select', index)
 
     v > 0.7 ? selectByVelocity() : selectByIndex()
   }
