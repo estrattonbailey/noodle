@@ -146,7 +146,7 @@ export default function noodle (slider, opts = {}) {
    * Called after each cell selection
    */
   function reset () {
-    tick = typeof tick === 'function' ? tick() : clearInterval(tick)
+    tick = typeof tick === 'function' ? tick() : cancelAnimationFrame(tick)
     ticking = false
     delta = 0
   }
@@ -155,6 +155,8 @@ export default function noodle (slider, opts = {}) {
     for (let i = 0; i < track.children.length; i++) {
       track.children[i].classList[i === index ? 'add' : 'remove']('is-selected')
     }
+
+    if (opts.setHeight) slider.style.height = track.children[index].clientHeight + 'px'
   }
 
   /**
@@ -188,7 +190,7 @@ export default function noodle (slider, opts = {}) {
 
     ticking = true
 
-    tick = setInterval(() => {
+    tick = requestAnimationFrame(() => {
       if (v > 0.2) {
         v *= 1 - 0.1
         const c = (diff * (1 - (d / diff)))
@@ -199,7 +201,7 @@ export default function noodle (slider, opts = {}) {
         reset()
         prevIndex !== index && emit('settle', index)
       }
-    }, (1000 / 60))
+    })
   }
 
   function selectByIndex () {
