@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/estrattonbailey/noodle#readme",
   "devDependencies": {
-    "microbundle": "^0.4.4"
+    "microbundle": "^0.5.1"
   },
   "dependencies": {
     "mitt": "^1.1.3",
