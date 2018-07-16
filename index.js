@@ -25,6 +25,7 @@ export default function noodle (slider, opts = {}) {
   let tick = null
   let totalTravel = 0
   let dragging = false
+  let destroyed = false
 
   const evs = {}
 
@@ -59,24 +60,6 @@ export default function noodle (slider, opts = {}) {
     }
 
     return i
-  }
-
-  function cleanup () {
-    for (let i = track.children.length - 1; i > -1; i--) {
-      const slide = track.children[i]
-
-      slider.insertBefore(slide, slider.children[0])
-      slide.style.position = ''
-      slide.style.top = ''
-      slide.style.left = ''
-    }
-
-    slider.removeAttribute('tabindex')
-    slider.removeChild(track)
-    slider.style.height = ''
-
-    window.removeEventListener('resize', resize)
-    window.removeEventListener('keydown', keypress)
   }
 
   /**
@@ -118,7 +101,7 @@ export default function noodle (slider, opts = {}) {
       slide.style.left = offset + '%'
     }
 
-    if (opts.setHeight) slider.style.height = track.children[index].clientHeight + 'px'
+    if (opts.setHeight && track.children[index]) slider.style.height = track.children[index].clientHeight + 'px'
   }
 
   /**
@@ -126,6 +109,8 @@ export default function noodle (slider, opts = {}) {
    */
   function resize () {
     requestAnimationFrame(() => {
+      if (destroyed) return
+
       width = slider.clientWidth
 
       totalTravel = 0
@@ -156,7 +141,7 @@ export default function noodle (slider, opts = {}) {
       track.children[i].classList[i === index ? 'add' : 'remove']('is-selected')
     }
 
-    if (opts.setHeight) slider.style.height = track.children[index].clientHeight + 'px'
+    if (opts.setHeight && track.children[index]) slider.style.height = track.children[index].clientHeight + 'px'
   }
 
   /**
@@ -328,7 +313,24 @@ export default function noodle (slider, opts = {}) {
     },
     destroy () {
       drag.destroy()
-      cleanup()
+
+      destroyed = true
+
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('keydown', keypress)
+
+      for (let i = track.children.length - 1; i > -1; i--) {
+        const slide = track.children[i]
+
+        slider.insertBefore(slide, slider.children[0])
+        slide.style.position = ''
+        slide.style.top = ''
+        slide.style.left = ''
+      }
+
+      slider.removeAttribute('tabindex')
+      slider.removeChild(track)
+      slider.style.height = ''
     }
   }
 }
