@@ -35,7 +35,7 @@ const slider = noodle(document.getElementById('slider'))
 noodle(node, options)
 ```
 ### setHeight
-By default, `noodle` calculates slider height based on the first slide. To
+By default, `noodle` calculates slider height based on the active slide. To
 disable, set to `false`.
 
 # Events
