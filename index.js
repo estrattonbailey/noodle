@@ -240,8 +240,10 @@ export default function noodle (slider, opts = {}) {
     }
   }
 
-  function release () {
+  function release (e) {
     dragging = false
+
+    slider.classList.remove('is-dragging')
 
     t = null
 
@@ -268,6 +270,7 @@ export default function noodle (slider, opts = {}) {
 
   function move ({ x, y }, e) {
     dragging = true
+    slider.classList.add('is-dragging')
     velo = ((x - delta) / (e.timeStamp - t)) * (1000 / 60)
     t = e.timeStamp
     delta = x
