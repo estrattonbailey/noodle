@@ -315,6 +315,8 @@ export default function noodle (slider, opts = {}) {
       select(index + 1)
     },
     destroy () {
+      if (destroyed) return
+
       drag.destroy()
 
       destroyed = true
