@@ -134,6 +134,7 @@ export default function noodle (slider, opts = {}) {
     tick = typeof tick === 'function' ? tick() : cancelAnimationFrame(tick)
     ticking = false
     delta = 0
+    velo = 0
   }
 
   function setActiveSlide () {
@@ -155,38 +156,6 @@ export default function noodle (slider, opts = {}) {
     }
 
     return Math.min(travel, totalTravel) * -1
-  }
-
-  function selectByVelocity () {
-    setActiveSlide()
-
-    let v = Math.abs(velo)
-    let prev = getPosition(prevIndex)
-    const end = getPosition(index)
-    const curr = position
-    let diff = Math.abs(end) - Math.abs(position)
-    let d = diff
-
-    /**
-     * Prevent moving beyond first & last slide
-     */
-    const isAtZero = delta > 0 && index === 0 && prevIndex === 0
-    const isAtLastSlide = Math.abs(end) > totalTravel // or >= ?
-
-    ticking = true
-
-    tick = requestAnimationFrame(() => {
-      if (v > 0.2) {
-        v *= 1 - 0.1
-        const c = (diff * (1 - (d / diff)))
-        position = isAtZero || isAtLastSlide ? curr + c : curr - c
-        track.style.transform = `translateX(${position}px)`
-        d *= 1 - 0.1
-      } else {
-        reset()
-        prevIndex !== index && emit('settle', index)
-      }
-    })
   }
 
   function selectByIndex () {
@@ -212,13 +181,13 @@ export default function noodle (slider, opts = {}) {
     })
   }
 
-  function whichByDistance (delta, dir, slidesPast = 0) {
+  function whichByDistance (delta, slidesPast = 0, dir) {
     const i = clamp(index + (slidesPast * dir * -1))
-    const threshold = 0.2
+    const threshold = 0.1
     const currSlideWidth = track.children[i].clientWidth
 
     if (delta > currSlideWidth) {
-      return whichByDistance(delta - currSlideWidth, dir, slidesPast + 1)
+      return whichByDistance(delta - currSlideWidth, slidesPast + 1, dir)
     } else if (delta > (currSlideWidth * threshold)) {
       return clamp(i - dir)
     } else if (delta < ((currSlideWidth * threshold) * -1)) {
@@ -247,25 +216,25 @@ export default function noodle (slider, opts = {}) {
 
     t = null
 
-    let dir = delta < 0 ? -1 : 1
     let v = Math.abs(velo)
 
     position = position + delta
 
+    // estimate resting position
     let x = 0
-    if (v > 0.7) {
-      while (v > 0.7) {
-        v *= 1 - 0.2
+    if (v > 0.1) {
+      while (v > 0.1) {
+        v *= 1 - 0.1
         x += v
       }
     }
 
     prevIndex = index
-    index = whichByDistance(Math.abs(delta) + x, dir)
+    index = whichByDistance(Math.abs(delta) + x, 0, delta < 0 ? -1 : 1)
 
     emit('select', index)
 
-    v > 0.7 ? selectByVelocity() : selectByIndex()
+    selectByIndex()
   }
 
   function move ({ x, y }, e) {
