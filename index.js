@@ -1,5 +1,6 @@
 import tinkerbell from 'tinkerbell'
 import rosin from 'rosin'
+import srraf from 'srraf'
 
 function ease (t, b, c, d) {
   return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
@@ -13,7 +14,7 @@ export default function noodle (slider, opts = {}) {
   /**
    * Hoisted variables
    */
-  let width = slider.clientWidth
+  let width = slider.offsetWidth
   let prevIndex = 0
   let index = 0
   let slidesCount = 0
@@ -21,10 +22,16 @@ export default function noodle (slider, opts = {}) {
   let delta = 0
   let t = Date.now()
   let velo = 0
-  let ticking = false
-  let tick = null
   let totalTravel = 0
+
+  let ticking = false
   let dragging = false
+
+  let tick = null
+  let dragger = null
+  let resizer = null
+
+  let active = false
   let destroyed = false
 
   const evs = {}
@@ -49,17 +56,8 @@ export default function noodle (slider, opts = {}) {
     top: 0; left: 0; right: 0; bottom: 0;
   `
 
-  /**
-   * Limit to beginning and end
-   */
   function clamp (i) {
-    if (i > (slidesCount - 1)) {
-      return (slidesCount - 1)
-    } else if (i < 0) {
-      return 0
-    }
-
-    return i
+    return Math.max(0, Math.min(slidesCount - 1, i))
   }
 
   /**
@@ -72,7 +70,7 @@ export default function noodle (slider, opts = {}) {
     for (let i = slider.children.length - 1; i > -1; i--) {
       const slide = slider.children[i]
 
-      totalTravel += slide.clientWidth
+      slide.setAttribute('tabindex', '1')
 
       track.insertBefore(slide, track.children[0])
 
@@ -82,17 +80,34 @@ export default function noodle (slider, opts = {}) {
     slider.appendChild(track)
     slider.setAttribute('tabindex', '0')
 
-    totalTravel -= width
-
     reflow()
   }
 
+  /**
+   * Get's total slide width in comparison to the width of
+   * the slider parent. If this is < 0, it means the slides
+   * are less wide than the parent, and the slider can be
+   * destroyed. If it's > 0, we need to slide
+   */
+  function getTotalTravel () {
+    const parent = active ? track : slider
+
+    let w = width * -1
+
+    for (let i = 0; i < parent.children.length; i++) w += parent.children[i].offsetWidth
+
+    return w
+  }
+
+  /**
+   * Reset slide position within the slider. Happens on resize.
+   */
   function reflow () {
     let offset = 0
 
     for (let i = 0; i < track.children.length; i++) {
       if (i > 0) {
-        offset += (i / i) * ((track.children[i - 1].clientWidth / width) * 100)
+        offset += (i / i) * Math.ceil((track.children[i - 1].offsetWidth / width) * 100)
       }
 
       const slide = track.children[i]
@@ -105,30 +120,32 @@ export default function noodle (slider, opts = {}) {
   }
 
   /**
-   * Called on each tick
+   * Update dimensions and call reflow. Also manages
+   * whether or not the slider should be active,
+   * based on the totalTravel
    */
   function resize () {
-    requestAnimationFrame(() => {
-      if (destroyed) return
+    width = slider.offsetWidth
 
-      width = slider.clientWidth
+    totalTravel = getTotalTravel()
 
-      totalTravel = 0
+    if (totalTravel <= 0 && active) {
+      console.log('destroy')
+      destroy()
+    } else if (totalTravel > 0 && !active) {
+      console.log('init')
+      init()
+    }
 
-      for (let i = 0; i < track.children.length; i++) {
-        totalTravel += track.children[i].clientWidth
-      }
-
-      totalTravel -= width
-
+    if (active && !destroyed) {
       reflow()
-
       selectByIndex()
-    })
+    }
   }
 
   /**
-   * Called after each cell selection
+   * Called after each cell selection,
+   * or when sliding is interrupted by another action.
    */
   function reset () {
     tick = typeof tick === 'function' ? tick() : cancelAnimationFrame(tick)
@@ -137,33 +154,46 @@ export default function noodle (slider, opts = {}) {
     velo = 0
   }
 
+  /**
+   * Set active class
+   */
   function setActiveSlide () {
     for (let i = 0; i < track.children.length; i++) {
-      track.children[i].classList[i === index ? 'add' : 'remove']('is-selected')
+      if (i === index) {
+        track.children[i].classList.add('is-selected')
+        track.children[i].setAttribute('tabindex', '0')
+        track.children[i].focus()
+      } else {
+        track.children[i].classList.remove('is-selected')
+        track.children[i].setAttribute('tabindex', '1')
+      }
     }
 
     if (opts.setHeight && track.children[index]) slider.style.height = track.children[index].clientHeight + 'px'
   }
 
   /**
-   * Get position at index, either prevIndex or index
+   * Get slide[index] position, either prevIndex or index
    */
   function getPosition (ind) {
     let travel = 0
 
     for (let i = 0; i < ind; i++) {
-      travel += track.children[i].clientWidth
+      travel += track.children[i].offsetWidth
     }
 
     return Math.min(travel, totalTravel) * -1
   }
 
+  /**
+   * Slide to slide at provided index
+   */
   function selectByIndex () {
     setActiveSlide()
 
     ticking = true
 
-    const nextSlideWidth = track.children[index].clientWidth
+    const nextSlideWidth = track.children[index].offsetWidth
     const prev = position // getPosition(prevIndex)
     const next = getPosition(index)
 
@@ -181,10 +211,14 @@ export default function noodle (slider, opts = {}) {
     })
   }
 
+  /**
+   * Calculates which slide the swipe will come to rest on,
+   * accounting for momentum calculated in release()
+   */
   function whichByDistance (delta, slidesPast = 0, dir) {
     const i = clamp(index + (slidesPast * dir * -1))
-    const threshold = 0.1
-    const currSlideWidth = track.children[i].clientWidth
+    const threshold = 0.15
+    const currSlideWidth = track.children[i].offsetWidth
 
     if (delta > currSlideWidth) {
       return whichByDistance(delta - currSlideWidth, slidesPast + 1, dir)
@@ -209,6 +243,10 @@ export default function noodle (slider, opts = {}) {
     }
   }
 
+  /**
+   * End flick action and calculate slider resting position,
+   * then select that slide
+   */
   function release (e) {
     dragging = false
 
@@ -224,7 +262,7 @@ export default function noodle (slider, opts = {}) {
     let x = 0
     if (v > 0.1) {
       while (v > 0.1) {
-        v *= 1 - 0.1
+        v *= 1 - 0.15
         x += v
       }
     }
@@ -237,6 +275,9 @@ export default function noodle (slider, opts = {}) {
     selectByIndex()
   }
 
+  /**
+   * Tracks swipe action
+   */
   function move ({ x, y }, e) {
     dragging = true
     slider.classList.add('is-dragging')
@@ -247,9 +288,7 @@ export default function noodle (slider, opts = {}) {
   }
 
   function start (pos, e) {
-    if (ticking && tick) {
-      reset()
-    }
+    if (ticking && tick) reset()
   }
 
   function keypress ({ keyCode }) {
@@ -259,38 +298,18 @@ export default function noodle (slider, opts = {}) {
     }
   }
 
-  const drag = rosin(slider)
-  drag.on('mousedown', start)
-  drag.on('drag', move)
-  drag.on('mouseup', release)
+  function destroy () {
+    if (destroyed) return
 
-  window.addEventListener('resize', resize)
-  window.addEventListener('keydown', keypress)
+    active = false
+    destroyed = true
 
-  mount()
-  setActiveSlide()
+    /**
+     * Execute all at once
+     */
+    requestAnimationFrame(() => {
+      dragger.destroy()
 
-  return {
-    on,
-    resize,
-    select,
-    get index () {
-      return index
-    },
-    prev () {
-      select(index - 1)
-    },
-    next () {
-      select(index + 1)
-    },
-    destroy () {
-      if (destroyed) return
-
-      drag.destroy()
-
-      destroyed = true
-
-      window.removeEventListener('resize', resize)
       window.removeEventListener('keydown', keypress)
 
       for (let i = track.children.length - 1; i > -1; i--) {
@@ -300,11 +319,67 @@ export default function noodle (slider, opts = {}) {
         slide.style.position = ''
         slide.style.top = ''
         slide.style.left = ''
+
+        slide.removeAttribute('tabindex')
       }
 
       slider.removeAttribute('tabindex')
       slider.removeChild(track)
       slider.style.height = ''
+
+      slider.classList.remove('is-active')
+    })
+  }
+
+  function init () {
+    if (active) return
+
+    totalTravel = getTotalTravel()
+
+    totalTravel > 0 && requestAnimationFrame(() => {
+      mount()
+      setActiveSlide()
+
+      dragger = rosin(slider)
+      dragger.on('mousedown', start)
+      dragger.on('drag', move)
+      dragger.on('mouseup', release)
+
+      window.addEventListener('keydown', keypress)
+
+      destroyed = false
+      active = true
+
+      slider.classList.add('is-active')
+    })
+  }
+
+  /**
+   * Need this to run even if destroyed, so that it
+   * can re-init if needed
+   */
+  resizer = srraf(({ vw, pvw }) => {
+    if (vw !==pvw) resize()
+  })
+
+  /**
+   * Go go go
+   */
+  init()
+
+  return {
+    on,
+    resize,
+    select,
+    destroy,
+    get index () {
+      return index
+    },
+    prev () {
+      select(index - 1)
+    },
+    next () {
+      select(index + 1)
     }
   }
 }
