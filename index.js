@@ -57,7 +57,6 @@ export default function noodle (slider, opts = {}) {
   `
 
   function clamp (i) {
-    console.log(Math.max(0, Math.min(slidesCount - 1, i)))
     return Math.max(0, Math.min(slidesCount - 1, i))
   }
 
@@ -131,10 +130,8 @@ export default function noodle (slider, opts = {}) {
     totalTravel = getTotalTravel()
 
     if (totalTravel <= 0 && active) {
-      console.log('destroy')
       destroy()
     } else if (totalTravel > 0 && !active) {
-      console.log('init')
       init()
     }
 
