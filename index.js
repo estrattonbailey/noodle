@@ -146,10 +146,22 @@ export default function noodle (slider, opts = {}) {
    * or when sliding is interrupted by another action.
    */
   function reset () {
+    console.log('reset')
     tick = typeof tick === 'function' ? tick() : cancelAnimationFrame(tick)
     ticking = false
     delta = 0
     velo = 0
+  }
+
+  function focusActiveSlide () {
+    for (let i = 0; i < track.children.length; i++) {
+      if (i === index) {
+        track.children[i].setAttribute('tabindex', '0')
+        track.children[i].focus()
+      } else {
+        track.children[i].setAttribute('tabindex', '1')
+      }
+    }
   }
 
   /**
@@ -157,14 +169,7 @@ export default function noodle (slider, opts = {}) {
    */
   function setActiveSlide () {
     for (let i = 0; i < track.children.length; i++) {
-      if (i === index) {
-        track.children[i].classList.add('is-selected')
-        track.children[i].setAttribute('tabindex', '0')
-        track.children[i].focus()
-      } else {
-        track.children[i].classList.remove('is-selected')
-        track.children[i].setAttribute('tabindex', '1')
-      }
+      track.children[i].classList[i === index ? 'add' : 'remove']('is-selected')
     }
 
     if (opts.setHeight && track.children[index]) slider.style.height = track.children[index].clientHeight + 'px'
@@ -187,8 +192,6 @@ export default function noodle (slider, opts = {}) {
    * Slide to slide at provided index
    */
   function selectByIndex () {
-    setActiveSlide()
-
     ticking = true
 
     const nextSlideWidth = track.children[index].offsetWidth
@@ -200,10 +203,13 @@ export default function noodle (slider, opts = {}) {
      */
     if (Math.abs(next) > totalTravel) return reset()
 
+    setActiveSlide()
+
     tick = tinkerbell(prev, next, 1000, ease)(v => {
       track.style.transform = `translateX(${v}px)`
       position = v
     }, () => {
+      focusActiveSlide()
       reset()
       prevIndex !== index && emit('settle', index)
     })
