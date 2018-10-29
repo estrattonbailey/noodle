@@ -57,6 +57,7 @@ export default function noodle (slider, opts = {}) {
   `
 
   function clamp (i) {
+    console.log(Math.max(0, Math.min(slidesCount - 1, i)))
     return Math.max(0, Math.min(slidesCount - 1, i))
   }
 
@@ -107,7 +108,7 @@ export default function noodle (slider, opts = {}) {
 
     for (let i = 0; i < track.children.length; i++) {
       if (i > 0) {
-        offset += (i / i) * Math.ceil((track.children[i - 1].offsetWidth / width) * 100)
+        offset += (i / i) * (track.children[i - 1].offsetWidth / width) * 100
       }
 
       const slide = track.children[i]
@@ -194,7 +195,7 @@ export default function noodle (slider, opts = {}) {
     ticking = true
 
     const nextSlideWidth = track.children[index].offsetWidth
-    const prev = position // getPosition(prevIndex)
+    const prev = position // basically, getPosition(prevIndex)
     const next = getPosition(index)
 
     /**
@@ -256,6 +257,7 @@ export default function noodle (slider, opts = {}) {
 
     let v = Math.abs(velo)
 
+    // starting position for tween
     position = position + delta
 
     // estimate resting position
@@ -301,9 +303,6 @@ export default function noodle (slider, opts = {}) {
   function destroy () {
     if (destroyed) return
 
-    active = false
-    destroyed = true
-
     /**
      * Execute all at once
      */
@@ -328,6 +327,15 @@ export default function noodle (slider, opts = {}) {
       slider.style.height = ''
 
       slider.classList.remove('is-active')
+
+      active = false
+      destroyed = true
+
+      slidesCount = 0
+      prevIndex = 0
+      index = 0
+      slidesCount = 0
+      position = 0
     })
   }
 
