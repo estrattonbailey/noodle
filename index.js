@@ -8,6 +8,7 @@ function ease (t, b, c, d) {
 
 export default function noodle (slider, opts = {}) {
   opts = Object.assign({
+    a11y: true,
     setHeight: true
   }, opts)
 
@@ -146,7 +147,6 @@ export default function noodle (slider, opts = {}) {
    * or when sliding is interrupted by another action.
    */
   function reset () {
-    console.log('reset')
     tick = typeof tick === 'function' ? tick() : cancelAnimationFrame(tick)
     ticking = false
     delta = 0
@@ -154,6 +154,8 @@ export default function noodle (slider, opts = {}) {
   }
 
   function focusActiveSlide () {
+    if (!opts.a11y) return
+
     for (let i = 0; i < track.children.length; i++) {
       if (i === index) {
         track.children[i].setAttribute('tabindex', '0')
