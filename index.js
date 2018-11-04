@@ -138,7 +138,7 @@ export default function noodle (slider, opts = {}) {
 
     if (active && !destroyed) {
       reflow()
-      selectByIndex()
+      selectByIndex(true) // skip focus
     }
   }
 
@@ -193,7 +193,7 @@ export default function noodle (slider, opts = {}) {
   /**
    * Slide to slide at provided index
    */
-  function selectByIndex () {
+  function selectByIndex (skipFocus) {
     ticking = true
 
     const nextSlideWidth = track.children[index].offsetWidth
@@ -211,7 +211,7 @@ export default function noodle (slider, opts = {}) {
       track.style.transform = `translateX(${v}px)`
       position = v
     }, () => {
-      focusActiveSlide()
+      !skipFocus && focusActiveSlide()
       reset()
       prevIndex !== index && emit('settle', index)
     })
