@@ -311,37 +311,35 @@ export default function noodle (slider, opts = {}) {
     /**
      * Execute all at once
      */
-    requestAnimationFrame(() => {
-      dragger.destroy()
+    dragger.destroy()
 
-      window.removeEventListener('keydown', keypress)
+    window.removeEventListener('keydown', keypress)
 
-      for (let i = track.children.length - 1; i > -1; i--) {
-        const slide = track.children[i]
+    for (let i = track.children.length - 1; i > -1; i--) {
+      const slide = track.children[i]
 
-        slider.insertBefore(slide, slider.children[0])
-        slide.style.position = ''
-        slide.style.top = ''
-        slide.style.left = ''
+      slider.insertBefore(slide, slider.children[0])
+      slide.style.position = ''
+      slide.style.top = ''
+      slide.style.left = ''
 
-        slide.removeAttribute('tabindex')
-      }
+      slide.removeAttribute('tabindex')
+    }
 
-      slider.removeAttribute('tabindex')
-      slider.removeChild(track)
-      slider.style.height = ''
+    slider.removeAttribute('tabindex')
+    slider.removeChild(track)
+    slider.style.height = ''
 
-      slider.classList.remove('is-active')
+    slider.classList.remove('is-active')
 
-      active = false
-      destroyed = true
+    active = false
+    destroyed = true
 
-      slidesCount = 0
-      prevIndex = 0
-      index = 0
-      slidesCount = 0
-      position = 0
-    })
+    slidesCount = 0
+    prevIndex = 0
+    index = 0
+    slidesCount = 0
+    position = 0
   }
 
   function init () {
@@ -349,22 +347,26 @@ export default function noodle (slider, opts = {}) {
 
     totalTravel = getTotalTravel()
 
-    totalTravel > 0 && requestAnimationFrame(() => {
-      mount()
-      setActiveSlide()
+    if (totalTravel > 0) {
+      requestAnimationFrame(() => {
+        mount()
+        setActiveSlide()
 
-      dragger = rosin(slider)
-      dragger.on('mousedown', start)
-      dragger.on('drag', move)
-      dragger.on('mouseup', release)
+        dragger = rosin(slider)
+        dragger.on('mousedown', start)
+        dragger.on('drag', move)
+        dragger.on('mouseup', release)
 
-      window.addEventListener('keydown', keypress)
+        window.addEventListener('keydown', keypress)
 
-      destroyed = false
-      active = true
+        destroyed = false
+        active = true
 
-      slider.classList.add('is-active')
-    })
+        slider.classList.add('is-active')
+      })
+    } else {
+      destroyed = true
+    }
   }
 
   /**
