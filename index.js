@@ -33,7 +33,8 @@ export default function noodle (slider, opts = {}) {
   let resizer = null
 
   let active = false
-  let destroyed = false
+  let suspended = false // library disabled
+  let destroyed = false // user disabled
 
   const evs = {}
 
@@ -88,7 +89,7 @@ export default function noodle (slider, opts = {}) {
    * Get's total slide width in comparison to the width of
    * the slider parent. If this is < 0, it means the slides
    * are less wide than the parent, and the slider can be
-   * destroyed. If it's > 0, we need to slide
+   * suspended. If it's > 0, we need to slide
    */
   function getTotalTravel () {
     const parent = active ? track : slider
@@ -136,7 +137,7 @@ export default function noodle (slider, opts = {}) {
       init()
     }
 
-    if (active && !destroyed) {
+    if (active && !suspended) {
       reflow()
       selectByIndex(true) // skip focus
     }
@@ -306,7 +307,7 @@ export default function noodle (slider, opts = {}) {
   }
 
   function destroy () {
-    if (destroyed) return
+    if (suspended || destroyed) return
 
     /**
      * Execute all at once
@@ -324,6 +325,7 @@ export default function noodle (slider, opts = {}) {
       slide.style.left = ''
 
       slide.removeAttribute('tabindex')
+      slide.classList.remove('is-selected')
     }
 
     slider.removeAttribute('tabindex')
@@ -333,7 +335,7 @@ export default function noodle (slider, opts = {}) {
     slider.classList.remove('is-active')
 
     active = false
-    destroyed = true
+    suspended = true
 
     slidesCount = 0
     prevIndex = 0
@@ -348,32 +350,31 @@ export default function noodle (slider, opts = {}) {
     totalTravel = getTotalTravel()
 
     if (totalTravel > 0) {
-      requestAnimationFrame(() => {
-        mount()
-        setActiveSlide()
+      mount()
+      setActiveSlide()
 
-        dragger = rosin(slider)
-        dragger.on('mousedown', start)
-        dragger.on('drag', move)
-        dragger.on('mouseup', release)
+      dragger = rosin(slider)
+      dragger.on('mousedown', start)
+      dragger.on('drag', move)
+      dragger.on('mouseup', release)
 
-        window.addEventListener('keydown', keypress)
+      window.addEventListener('keydown', keypress)
 
-        destroyed = false
-        active = true
+      suspended = false
+      active = true
 
-        slider.classList.add('is-active')
-      })
+      slider.classList.add('is-active')
     } else {
-      destroyed = true
+      suspended = true
     }
   }
 
   /**
-   * Need this to run even if destroyed, so that it
+   * Need this to run even if suspended, so that it
    * can re-init if needed
    */
   resizer = srraf(({ vw, pvw }) => {
+    if (destroyed) return
     if (vw !==pvw) resize()
   })
 
@@ -386,7 +387,14 @@ export default function noodle (slider, opts = {}) {
     on,
     resize,
     select,
-    destroy,
+    init () {
+      init()
+      destroyed = false
+    },
+    destroy () {
+      destroy()
+      destroyed = true
+    },
     get index () {
       return index
     },
