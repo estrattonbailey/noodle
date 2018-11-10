@@ -342,6 +342,8 @@ export default function noodle (slider, opts = {}) {
     index = 0
     slidesCount = 0
     position = 0
+
+    emit('destroy')
   }
 
   function init () {
@@ -364,6 +366,8 @@ export default function noodle (slider, opts = {}) {
       active = true
 
       slider.classList.add('is-active')
+
+      emit('init')
     } else {
       suspended = true
     }
@@ -394,6 +398,15 @@ export default function noodle (slider, opts = {}) {
     destroy () {
       destroy()
       destroyed = true
+    },
+    get active () {
+      return active
+    },
+    get suspended () {
+      return suspended
+    },
+    get destroyed () {
+      return destroyed
     },
     get index () {
       return index
