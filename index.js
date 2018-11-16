@@ -8,6 +8,7 @@ function ease (t, b, c, d) {
 
 export default function noodle (slider, opts = {}) {
   opts = Object.assign({
+    index: 0,
     a11y: true,
     setHeight: true
   }, opts)
@@ -17,7 +18,7 @@ export default function noodle (slider, opts = {}) {
    */
   let width = slider.offsetWidth
   let prevIndex = 0
-  let index = 0
+  let index = opts.index
   let slidesCount = 0
   let position = 0
   let delta = 0
@@ -59,7 +60,7 @@ export default function noodle (slider, opts = {}) {
   `
 
   function clamp (i) {
-    return Math.max(0, Math.min(slidesCount - 1, i))
+    return Math.min(Math.max(i, 0), (slidesCount - 1))
   }
 
   /**
@@ -81,6 +82,9 @@ export default function noodle (slider, opts = {}) {
 
     slider.appendChild(track)
     slider.setAttribute('tabindex', '0')
+
+    position = getPosition(index)
+    track.style.transform = `translateX(${position}px)`
 
     reflow()
   }
@@ -218,20 +222,25 @@ export default function noodle (slider, opts = {}) {
     })
   }
 
+  let C = 0
+
   /**
    * Calculates which slide the swipe will come to rest on,
    * accounting for momentum calculated in release()
    */
-  function whichByDistance (delta, slidesPast = 0, dir) {
-    const i = clamp(index + (slidesPast * dir * -1))
+  function whichByDistance (del, slidesPast = 0, dir) {
+    const requested = index + (slidesPast * dir * -1)
+    const i = clamp(requested)
     const threshold = 0.15
     const currSlideWidth = track.children[i].offsetWidth
 
-    if (delta > currSlideWidth) {
-      return whichByDistance(delta - currSlideWidth, slidesPast + 1, dir)
-    } else if (delta > (currSlideWidth * threshold)) {
+    if (requested > (slidesCount - 1) || requested < 0) {
+      return i
+    } else if (del > currSlideWidth) {
+      return whichByDistance(del - currSlideWidth, slidesPast + 1, dir)
+    } else if (del > (currSlideWidth * threshold)) {
       return clamp(i - dir)
-    } else if (delta < ((currSlideWidth * threshold) * -1)) {
+    } else if (del < ((currSlideWidth * threshold) * -1)) {
       return clamp(i - dir)
     } else {
       return index

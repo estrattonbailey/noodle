@@ -38,6 +38,13 @@ noodle(node, options)
 By default, `noodle` calculates slider height based on the active slide. To
 disable, set to `false`.
 
+### ally
+Set to `false` to disabled the default behavior or focusing the slideshow and
+active slide after user interaction.
+
+### index
+Set the initial active slide of the slideshow. Default: `0`.
+
 # Events
 ### select
 Fired immediately on slide selection.
@@ -61,6 +68,11 @@ slider.index // => 3
 ```javascript
 slider.on('select', index => {})
 ```
+### index
+Return the current index.
+```javascript
+slider.index // => 0
+```
 ### select(index)
 ```javascript
 slider.select(3)
@@ -82,6 +94,11 @@ slider.resize()
 ### destroy()
 ```javascript
 slider.destroy()
+```
+### init()
+Re-initialize a destroyed slideshow.
+```javascript
+slider.init()
 ```
 
 # Inspiration
