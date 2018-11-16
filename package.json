@@ -1,6 +1,6 @@
 {
   "name": "noodle",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Tiny tweeing library that sparkles.",
   "source": "index.js",
   "module": "dist/noodle.es.js",
