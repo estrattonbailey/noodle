@@ -63,6 +63,14 @@ export default function noodle (slider, opts = {}) {
     return Math.min(Math.max(i, 0), (slidesCount - 1))
   }
 
+  function disableImgDrag () {
+    const imgs = slider.getElementsByTagName('img')
+    for (let i = 0; i < imgs.length; i++) {
+      imgs[i].onmousedown = e => e.preventDefault()
+      imgs[i].ontouchstart = e => e.preventDefault()
+    }
+  }
+
   /**
    * TODO
    *
@@ -85,6 +93,8 @@ export default function noodle (slider, opts = {}) {
 
     position = getPosition(index)
     track.style.transform = `translateX(${position}px)`
+
+    disableImgDrag()
 
     reflow()
   }
@@ -143,7 +153,7 @@ export default function noodle (slider, opts = {}) {
 
     if (active && !suspended) {
       reflow()
-      selectByIndex(true) // skip focus
+      selectByIndex(true) // skip focus, will jump page or slider otherwise
     }
   }
 
@@ -222,8 +232,6 @@ export default function noodle (slider, opts = {}) {
     })
   }
 
-  let C = 0
-
   /**
    * Calculates which slide the swipe will come to rest on,
    * accounting for momentum calculated in release()
@@ -248,10 +256,10 @@ export default function noodle (slider, opts = {}) {
   }
 
   function select (i) {
+    if (index === i) return
+
     prevIndex = index
     index = clamp(i)
-
-    emit('select', index)
 
     if (prevIndex !== index) {
       reset()
