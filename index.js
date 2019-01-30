@@ -256,12 +256,12 @@ export default function noodle (slider, opts = {}) {
   }
 
   function select (i) {
-    if (index === i) return
+    i = clamp(i)
 
-    prevIndex = index
-    index = clamp(i)
+    if (index !== i) {
+      prevIndex = index
+      index = i
 
-    if (prevIndex !== index) {
       reset()
       selectByIndex()
     }
