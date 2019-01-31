@@ -47,6 +47,7 @@ export default function noodle (slider, opts = {}) {
   }
 
   function emit (ev, data) {
+    if (suspended) return
     (evs[ev] || []).map(cb => cb(data))
   }
 
@@ -261,6 +262,8 @@ export default function noodle (slider, opts = {}) {
     if (index !== i) {
       prevIndex = index
       index = i
+
+      emit('select', index)
 
       reset()
       selectByIndex()
