@@ -64,14 +64,6 @@ export default function noodle (slider, opts = {}) {
     return Math.min(Math.max(i, 0), (slidesCount - 1))
   }
 
-  function disableImgDrag () {
-    const imgs = slider.getElementsByTagName('img')
-    for (let i = 0; i < imgs.length; i++) {
-      imgs[i].onmousedown = e => e.preventDefault()
-      imgs[i].ontouchstart = e => e.preventDefault()
-    }
-  }
-
   /**
    * TODO
    *
@@ -95,7 +87,12 @@ export default function noodle (slider, opts = {}) {
     position = getPosition(index)
     track.style.transform = `translateX(${position}px)`
 
-    disableImgDrag()
+    // disable image drage
+    const imgs = slider.getElementsByTagName('img')
+    for (let i = 0; i < imgs.length; i++) {
+      imgs[i].onmousedown = e => e.preventDefault()
+      imgs[i].ontouchstart = e => e.preventDefault()
+    }
 
     reflow()
   }
@@ -111,7 +108,10 @@ export default function noodle (slider, opts = {}) {
 
     let w = width * -1
 
-    for (let i = 0; i < parent.children.length; i++) w += parent.children[i].offsetWidth
+    for (let i = 0; i < parent.children.length; i++) {
+      opts.debug && console.log(opts.debug, parent.children[i].clientWidth)
+      w += parent.children[i].clientWidth
+    }
 
     return w
   }
@@ -348,6 +348,11 @@ export default function noodle (slider, opts = {}) {
       slide.classList.remove('is-selected')
     }
 
+    const imgs = slider.getElementsByTagName('img')
+    for (let i = 0; i < imgs.length; i++) {
+      imgs[i].removeEventListener('load', reflow)
+    }
+
     slider.removeAttribute('tabindex')
     slider.removeChild(track)
     slider.style.height = ''
@@ -381,6 +386,11 @@ export default function noodle (slider, opts = {}) {
       dragger.on('mouseup', release)
 
       window.addEventListener('keydown', keypress)
+
+      const imgs = slider.getElementsByTagName('img')
+      for (let i = 0; i < imgs.length; i++) {
+        imgs[i].addEventListener('load', reflow)
+      }
 
       suspended = false
       active = true
