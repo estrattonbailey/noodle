@@ -1,5 +1,5 @@
 # noodle
-Tiny flickable slideshow. **1.5kb gzipped.**
+Tiny flickable slideshow. **1.8kb gzipped.**
 
 # Usage
 

@@ -87,11 +87,11 @@ export default function noodle (slider, opts = {}) {
     position = getPosition(index)
     track.style.transform = `translateX(${position}px)`
 
-    // disable image drage
+    // disable image drag
     const imgs = slider.getElementsByTagName('img')
     for (let i = 0; i < imgs.length; i++) {
       imgs[i].onmousedown = e => e.preventDefault()
-      imgs[i].ontouchstart = e => e.preventDefault()
+      // imgs[i].ontouchstart = e => e.preventDefault()
     }
 
     reflow()
@@ -382,7 +382,8 @@ export default function noodle (slider, opts = {}) {
 
       dragger = rosin(slider)
       dragger.on('mousedown', start)
-      dragger.on('drag', move)
+      dragger.on('dragLeft', move)
+      dragger.on('dragRight', move)
       dragger.on('mouseup', release)
 
       window.addEventListener('keydown', keypress)

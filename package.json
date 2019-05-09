@@ -28,7 +28,7 @@
     "microbundle": "^0.7.0"
   },
   "dependencies": {
-    "rosin": "^0.4.1",
+    "rosin": "^1.0.0",
     "srraf": "^3.1.1",
     "tinkerbell": "^0.2.0"
   }
