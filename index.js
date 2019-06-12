@@ -109,7 +109,6 @@ export default function noodle (slider, opts = {}) {
     let w = width * -1
 
     for (let i = 0; i < parent.children.length; i++) {
-      opts.debug && console.log(opts.debug, parent.children[i].clientWidth)
       w += parent.children[i].clientWidth
     }
 
@@ -279,7 +278,7 @@ export default function noodle (slider, opts = {}) {
 
     slider.classList.remove('is-dragging')
 
-    t = null
+    t = Date.now()
 
     let v = Math.abs(velo)
 
@@ -288,11 +287,9 @@ export default function noodle (slider, opts = {}) {
 
     // estimate resting position
     let x = 0
-    if (v > 0.1) {
-      while (v > 0.1) {
-        v *= 1 - 0.15
-        x += v
-      }
+    while (v > 0.1) {
+      v *= 1 - 0.15
+      x += v
     }
 
     prevIndex = index
