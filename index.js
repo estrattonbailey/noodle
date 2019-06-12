@@ -16,6 +16,7 @@ export default function noodle (slider, opts = {}) {
   /**
    * Hoisted variables
    */
+  const frame = 1000 / 60
   let width = slider.offsetWidth
   let prevIndex = 0
   let index = opts.index
@@ -273,12 +274,12 @@ export default function noodle (slider, opts = {}) {
    * End flick action and calculate slider resting position,
    * then select that slide
    */
-  function release (e) {
+  function release (pos, e) {
     dragging = false
 
     slider.classList.remove('is-dragging')
 
-    t = Date.now()
+    t = e.timeStamp
 
     let v = Math.abs(velo)
 
@@ -303,10 +304,11 @@ export default function noodle (slider, opts = {}) {
   /**
    * Tracks swipe action
    */
-  function move ({ x, y }, e) {
+  function move ({ x }, e) {
     dragging = true
     slider.classList.add('is-dragging')
-    velo = ((x - delta) / (e.timeStamp - t)) * (1000 / 60)
+    const elapsed = e.timeStamp - t || 1 // in ms, must be > 0
+    velo = (x - delta) / (elapsed * frame)
     t = e.timeStamp
     delta = x
     track.style.transform = `translateX(${position + delta}px)`
