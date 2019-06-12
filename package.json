@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "build": "microbundle build",
-    "watch": "microbundle watch --compress false",
+    "watch": "microbundle watch --compress false --external none",
+    "debug": "microbundle build --compress false --external none",
     "publish": "npm publish"
   },
   "repository": {
@@ -25,7 +26,7 @@
   },
   "homepage": "https://github.com/estrattonbailey/noodle#readme",
   "devDependencies": {
-    "microbundle": "^0.7.0"
+    "microbundle": "^0.11.0"
   },
   "dependencies": {
     "rosin": "^1.0.0",
